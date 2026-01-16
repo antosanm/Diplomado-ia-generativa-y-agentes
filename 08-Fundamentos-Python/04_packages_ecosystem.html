@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parte 4: Ecosistema de Paquetes</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #7c3aed;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .slide-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 4rem);
+        }
+
+        .slide {
+            display: none;
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 1400px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 3px solid var(--gray-200);
+        }
+
+        .slide-title {
+            font-size: 2.5rem;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .slide-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        .card {
+            background: var(--gray-50);
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h3 {
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .card h4 {
+            color: var(--gray-800);
+            margin-bottom: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        .card-primary {
+            background: white;
+            border-left: 4px solid var(--primary);
+        }
+
+        .card-success {
+            background: white;
+            border-left: 4px solid var(--success);
+        }
+
+        .card-warning {
+            background: white;
+            border-left: 4px solid var(--warning);
+        }
+
+        .card-danger {
+            background: white;
+            border-left: 4px solid var(--danger);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0.25rem;
+        }
+
+        .badge-sys {
+            background: var(--danger);
+            color: white;
+        }
+
+        .badge-lang {
+            background: var(--primary);
+            color: white;
+        }
+
+        .badge-ver {
+            background: var(--warning);
+            color: white;
+        }
+
+        .badge-env {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-hybrid {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .package-card {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .package-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .package-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .package-desc {
+            color: var(--gray-700);
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .package-install {
+            background: var(--gray-900);
+            color: #10b981;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+
+        .code-block {
+            background: var(--gray-900);
+            color: #e5e7eb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .code-comment {
+            color: #6b7280;
+        }
+
+        .code-keyword {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        ul {
+            list-style-position: inside;
+            color: var(--gray-700);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th {
+            background: var(--gray-800);
+            color: white;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        tr:hover {
+            background: var(--gray-50);
+        }
+
+        .nav-controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            background: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--gray-900);
+            font-weight: 700;
+        }
+
+        .category-section {
+            margin-bottom: 2rem;
+        }
+
+        .category-title {
+            color: var(--primary);
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- SLIDE 1: System Packages -->
+        <div class="slide active">
+            <div class="slide-header">
+                <h1 class="slide-title">🖥️ System Packages</h1>
+                <p class="slide-subtitle">Herramientas fundamentales a nivel de sistema operativo</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="category-section">
+                    <h3 class="category-title">🔧 Development Tools</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">build-essential / Xcode CLI</div>
+                        <div class="package-desc">Compiladores C/C++, make, y herramientas esenciales para compilar código</div>
+                        <div class="package-install">sudo apt install build-essential</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">git</div>
+                        <div class="package-desc">Control de versiones - esencial para cualquier proyecto moderno</div>
+                        <div class="package-install">sudo apt install git</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">curl / wget</div>
+                        <div class="package-desc">Herramientas para descargar archivos y hacer peticiones HTTP desde terminal</div>
+                        <div class="package-install">sudo apt install curl wget</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">🐍 Python Ecosystem</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">python3 / python3-dev</div>
+                        <div class="package-desc">Intérprete Python y headers para compilar extensiones nativas</div>
+                        <div class="package-install">sudo apt install python3 python3-dev</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">python3-pip</div>
+                        <div class="package-desc">Gestor de paquetes Python (si no viene incluido)</div>
+                        <div class="package-install">sudo apt install python3-pip</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">python3-venv</div>
+                        <div class="package-desc">Módulo para crear entornos virtuales (Debian/Ubuntu)</div>
+                        <div class="package-install">sudo apt install python3-venv</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="category-section">
+                    <h3 class="category-title">🗄️ Databases</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">postgresql / postgresql-client</div>
+                        <div class="package-desc">Base de datos relacional avanzada - ideal para producción</div>
+                        <div class="package-install">sudo apt install postgresql</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">redis-server</div>
+                        <div class="package-desc">Cache en memoria y broker de mensajes - clave para agentes</div>
+                        <div class="package-install">sudo apt install redis-server</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">🌐 Web Servers</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">nginx</div>
+                        <div class="package-desc">Servidor web de alto rendimiento y reverse proxy</div>
+                        <div class="package-install">sudo apt install nginx</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">docker / docker-compose</div>
+                        <div class="package-desc">Contenedores para desplegar aplicaciones aisladas</div>
+                        <div class="package-install">brew install docker</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: Python AI/ML Packages -->
+        <div class="slide">
+            <div class="slide-header">
+                <h1 class="slide-title">🤖 Python: AI & Machine Learning</h1>
+                <p class="slide-subtitle">Paquetes esenciales para desarrollo de agentes de IA</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="category-section">
+                    <h3 class="category-title">🧠 LLM Frameworks</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">langchain</div>
+                        <div class="package-desc">Framework principal para construir aplicaciones con LLMs - chains, agents, RAG</div>
+                        <div class="package-install">pip install langchain</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">langchain-community</div>
+                        <div class="package-desc">Integraciones comunitarias (loaders, retrievers, tools)</div>
+                        <div class="package-install">pip install langchain-community</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">openai</div>
+                        <div class="package-desc">SDK oficial de OpenAI para GPT-4, embeddings, y DALL-E</div>
+                        <div class="package-install">pip install openai</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">anthropic</div>
+                        <div class="package-desc">SDK de Claude (Anthropic) - excelente para razonamiento complejo</div>
+                        <div class="package-install">pip install anthropic</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">💾 Vector Databases</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">chromadb</div>
+                        <div class="package-desc">Base de datos vectorial en memoria - perfecta para RAG local</div>
+                        <div class="package-install">pip install chromadb</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pinecone-client</div>
+                        <div class="package-desc">Cliente para Pinecone - vector DB escalable en la nube</div>
+                        <div class="package-install">pip install pinecone-client</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">weaviate-client</div>
+                        <div class="package-desc">Cliente Weaviate - búsqueda vectorial con GraphQL</div>
+                        <div class="package-install">pip install weaviate-client</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">faiss-cpu</div>
+                        <div class="package-desc">Facebook AI Similarity Search - búsqueda vectorial ultra rápida</div>
+                        <div class="package-install">pip install faiss-cpu</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="category-section">
+                    <h3 class="category-title">📄 Document Processing</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">pypdf</div>
+                        <div class="package-desc">Extraer texto y metadata de PDFs</div>
+                        <div class="package-install">pip install pypdf</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">python-docx</div>
+                        <div class="package-desc">Leer y escribir documentos Word (.docx)</div>
+                        <div class="package-install">pip install python-docx</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">beautifulsoup4</div>
+                        <div class="package-desc">Web scraping y parsing de HTML/XML</div>
+                        <div class="package-install">pip install beautifulsoup4</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">🎯 Embeddings & Models</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">sentence-transformers</div>
+                        <div class="package-desc">Modelos de embeddings pre-entrenados (BERT, RoBERTa)</div>
+                        <div class="package-install">pip install sentence-transformers</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">transformers</div>
+                        <div class="package-desc">Librería HuggingFace para modelos transformer</div>
+                        <div class="package-install">pip install transformers</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">tiktoken</div>
+                        <div class="package-desc">Tokenizer de OpenAI para contar tokens con precisión</div>
+                        <div class="package-install">pip install tiktoken</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: Python Web Development -->
+        <div class="slide">
+            <div class="slide-header">
+                <h1 class="slide-title">🌐 Python: Web Development</h1>
+                <p class="slide-subtitle">Frameworks y herramientas para APIs y aplicaciones web</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="category-section">
+                    <h3 class="category-title">⚡ Web Frameworks</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">fastapi</div>
+                        <div class="package-desc">Framework moderno y rápido para APIs - perfecto para microservicios de IA</div>
+                        <div class="package-install">pip install fastapi</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">uvicorn</div>
+                        <div class="package-desc">Servidor ASGI ultra rápido para FastAPI</div>
+                        <div class="package-install">pip install uvicorn[standard]</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">django</div>
+                        <div class="package-desc">Framework completo "batteries included" - ideal para apps grandes</div>
+                        <div class="package-install">pip install django</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">flask</div>
+                        <div class="package-desc">Micro-framework minimalista y flexible</div>
+                        <div class="package-install">pip install flask</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">✅ Validation & Serialization</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">pydantic</div>
+                        <div class="package-desc">Validación de datos con type hints - core de FastAPI</div>
+                        <div class="package-install">pip install pydantic</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pydantic-settings</div>
+                        <div class="package-desc">Gestión de configuración con Pydantic</div>
+                        <div class="package-install">pip install pydantic-settings</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">marshmallow</div>
+                        <div class="package-desc">Serialización/deserialización de objetos complejos</div>
+                        <div class="package-install">pip install marshmallow</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="category-section">
+                    <h3 class="category-title">🔌 HTTP & API Clients</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">httpx</div>
+                        <div class="package-desc">Cliente HTTP moderno con soporte async/await</div>
+                        <div class="package-install">pip install httpx</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">requests</div>
+                        <div class="package-desc">El clásico - HTTP simple y elegante</div>
+                        <div class="package-install">pip install requests</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">aiohttp</div>
+                        <div class="package-desc">Cliente/servidor HTTP asíncrono</div>
+                        <div class="package-install">pip install aiohttp</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">🔐 Authentication & Security</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">python-jose</div>
+                        <div class="package-desc">JWT (JSON Web Tokens) para autenticación</div>
+                        <div class="package-install">pip install python-jose[cryptography]</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">passlib</div>
+                        <div class="package-desc">Hashing seguro de contraseñas</div>
+                        <div class="package-install">pip install passlib[bcrypt]</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">python-dotenv</div>
+                        <div class="package-desc">Cargar variables de entorno desde archivos .env</div>
+                        <div class="package-install">pip install python-dotenv</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: Python Data Science -->
+        <div class="slide">
+            <div class="slide-header">
+                <h1 class="slide-title">📊 Python: Data Science & Analytics</h1>
+                <p class="slide-subtitle">Herramientas para análisis y manipulación de datos</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="category-section">
+                    <h3 class="category-title">📈 Core Data Libraries</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">pandas</div>
+                        <div class="package-desc">Manipulación y análisis de datos tabulares - el estándar de facto</div>
+                        <div class="package-install">pip install pandas</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">numpy</div>
+                        <div class="package-desc">Computación numérica con arrays multidimensionales</div>
+                        <div class="package-install">pip install numpy</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">scipy</div>
+                        <div class="package-desc">Algoritmos científicos (optimización, estadística, señales)</div>
+                        <div class="package-install">pip install scipy</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">polars</div>
+                        <div class="package-desc">DataFrame ultra rápido en Rust - alternativa moderna a pandas</div>
+                        <div class="package-install">pip install polars</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">📉 Visualization</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">matplotlib</div>
+                        <div class="package-desc">Gráficos estáticos, animados e interactivos - la base de todo</div>
+                        <div class="package-install">pip install matplotlib</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">seaborn</div>
+                        <div class="package-desc">Visualización estadística de alto nivel sobre matplotlib</div>
+                        <div class="package-install">pip install seaborn</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">plotly</div>
+                        <div class="package-desc">Gráficos interactivos para web - ideal para dashboards</div>
+                        <div class="package-install">pip install plotly</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">streamlit</div>
+                        <div class="package-desc">Crea apps web de data science sin frontend</div>
+                        <div class="package-install">pip install streamlit</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="category-section">
+                    <h3 class="category-title">🤖 Machine Learning</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">scikit-learn</div>
+                        <div class="package-desc">ML clásico - clasificación, regresión, clustering, dimensionality reduction</div>
+                        <div class="package-install">pip install scikit-learn</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">xgboost</div>
+                        <div class="package-desc">Gradient boosting de alto rendimiento</div>
+                        <div class="package-install">pip install xgboost</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">lightgbm</div>
+                        <div class="package-desc">Gradient boosting rápido de Microsoft</div>
+                        <div class="package-install">pip install lightgbm</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">🗄️ Database Connectors</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">sqlalchemy</div>
+                        <div class="package-desc">ORM y toolkit SQL - el estándar de Python</div>
+                        <div class="package-install">pip install sqlalchemy</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">psycopg2-binary</div>
+                        <div class="package-desc">Driver PostgreSQL más usado</div>
+                        <div class="package-install">pip install psycopg2-binary</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">redis</div>
+                        <div class="package-desc">Cliente Python para Redis</div>
+                        <div class="package-install">pip install redis</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: Testing & Quality -->
+        <div class="slide">
+            <div class="slide-header">
+                <h1 class="slide-title">🧪 Python: Testing & Code Quality</h1>
+                <p class="slide-subtitle">Herramientas para testing, linting y calidad de código</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="category-section">
+                    <h3 class="category-title">✅ Testing Frameworks</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">pytest</div>
+                        <div class="package-desc">Framework de testing moderno - el más popular de Python</div>
+                        <div class="package-install">pip install pytest</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pytest-cov</div>
+                        <div class="package-desc">Plugin de cobertura de código para pytest</div>
+                        <div class="package-install">pip install pytest-cov</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pytest-asyncio</div>
+                        <div class="package-desc">Soporte para testing de código asíncrono</div>
+                        <div class="package-install">pip install pytest-asyncio</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">unittest</div>
+                        <div class="package-desc">Framework de testing incluido en Python stdlib</div>
+                        <div class="package-install"># Built-in - no requiere instalación</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">🔍 Code Quality & Linting</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">ruff</div>
+                        <div class="package-desc">Linter y formatter ultra rápido en Rust - reemplaza flake8, black, isort</div>
+                        <div class="package-install">pip install ruff</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">black</div>
+                        <div class="package-desc">Formateador de código "sin compromiso" - el estándar de Python</div>
+                        <div class="package-install">pip install black</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pylint</div>
+                        <div class="package-desc">Linter completo con análisis estático profundo</div>
+                        <div class="package-install">pip install pylint</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">mypy</div>
+                        <div class="package-desc">Type checker estático para Python</div>
+                        <div class="package-install">pip install mypy</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="category-section">
+                    <h3 class="category-title">🎭 Mocking & Fixtures</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">pytest-mock</div>
+                        <div class="package-desc">Plugin para mocking con pytest</div>
+                        <div class="package-install">pip install pytest-mock</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">factory-boy</div>
+                        <div class="package-desc">Fixtures de test complejas y realistas</div>
+                        <div class="package-install">pip install factory-boy</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">faker</div>
+                        <div class="package-desc">Generador de datos falsos realistas</div>
+                        <div class="package-install">pip install faker</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">📝 Documentation</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">sphinx</div>
+                        <div class="package-desc">Generador de documentación - usado por Python docs</div>
+                        <div class="package-install">pip install sphinx</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">mkdocs</div>
+                        <div class="package-desc">Documentación en Markdown - simple y hermosa</div>
+                        <div class="package-install">pip install mkdocs</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pdoc</div>
+                        <div class="package-desc">Auto-generación de docs desde docstrings</div>
+                        <div class="package-install">pip install pdoc</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: Conda Ecosystem -->
+        <div class="slide">
+            <div class="slide-header">
+                <h1 class="slide-title">🐍 Conda Ecosystem</h1>
+                <p class="slide-subtitle">Paquetes optimizados para Data Science y Deep Learning</p>
+            </div>
+
+            <div class="card card-primary">
+                <h3>💡 Ventaja de Conda</h3>
+                <p>Conda instala paquetes pre-compilados con optimizaciones (Intel MKL, CUDA) y gestiona dependencias no-Python (C++, CUDA, librerías del sistema).</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="category-section">
+                    <h3 class="category-title">🔥 Deep Learning Frameworks</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">pytorch</div>
+                        <div class="package-desc">Framework de DL más popular - dinámico y pythonico</div>
+                        <div class="package-install">conda install pytorch -c pytorch</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">tensorflow</div>
+                        <div class="package-desc">Framework de Google - estático con TensorFlow 2.x híbrido</div>
+                        <div class="package-install">conda install tensorflow</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">jax</div>
+                        <div class="package-desc">NumPy acelerado con GPU/TPU de Google</div>
+                        <div class="package-install">conda install jax -c conda-forge</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">cudatoolkit</div>
+                        <div class="package-desc">NVIDIA CUDA para aceleración GPU</div>
+                        <div class="package-install">conda install cudatoolkit=11.8</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">📊 Scientific Computing</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">numpy</div>
+                        <div class="package-desc">Versión optimizada con Intel MKL</div>
+                        <div class="package-install">conda install numpy</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">scipy</div>
+                        <div class="package-desc">Optimizada para operaciones científicas</div>
+                        <div class="package-install">conda install scipy</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">numba</div>
+                        <div class="package-desc">JIT compiler para acelerar Python con LLVM</div>
+                        <div class="package-install">conda install numba</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">dask</div>
+                        <div class="package-desc">Paralelización de pandas/numpy en clusters</div>
+                        <div class="package-install">conda install dask</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="category-section">
+                    <h3 class="category-title">📓 Jupyter Ecosystem</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">jupyter / jupyterlab</div>
+                        <div class="package-desc">Notebooks interactivos - el IDE de Data Science</div>
+                        <div class="package-install">conda install jupyterlab</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">ipywidgets</div>
+                        <div class="package-desc">Widgets interactivos para notebooks</div>
+                        <div class="package-install">conda install ipywidgets</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">notebook</div>
+                        <div class="package-desc">Jupyter Notebook clásico</div>
+                        <div class="package-install">conda install notebook</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">🧬 Specialized Science</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">opencv</div>
+                        <div class="package-desc">Computer vision - procesamiento de imágenes y video</div>
+                        <div class="package-install">conda install opencv</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">scikit-image</div>
+                        <div class="package-desc">Algoritmos de procesamiento de imágenes</div>
+                        <div class="package-install">conda install scikit-image</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">biopython</div>
+                        <div class="package-desc">Herramientas para biología computacional</div>
+                        <div class="package-install">conda install biopython -c conda-forge</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: Development Utilities -->
+        <div class="slide">
+            <div class="slide-header">
+                <h1 class="slide-title">🛠️ Development Utilities</h1>
+                <p class="slide-subtitle">Herramientas que mejoran tu workflow de desarrollo</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="category-section">
+                    <h3 class="category-title">⚡ Task Runners & Automation</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">invoke</div>
+                        <div class="package-desc">Task runner pythónico - alternativa a make</div>
+                        <div class="package-install">pip install invoke</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pre-commit</div>
+                        <div class="package-desc">Framework para git hooks - ejecuta linters automáticamente</div>
+                        <div class="package-install">pip install pre-commit</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">tox</div>
+                        <div class="package-desc">Testing en múltiples entornos Python</div>
+                        <div class="package-install">pip install tox</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">📦 Package Management</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">poetry</div>
+                        <div class="package-desc">Gestión moderna de dependencias y publicación</div>
+                        <div class="package-install">pip install poetry</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pipenv</div>
+                        <div class="package-desc">Gestión de venv + dependencias con Pipfile</div>
+                        <div class="package-install">pip install pipenv</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pip-tools</div>
+                        <div class="package-desc">Compile requirements.txt reproducibles</div>
+                        <div class="package-install">pip install pip-tools</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="category-section">
+                    <h3 class="category-title">🐛 Debugging & Profiling</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">ipdb</div>
+                        <div class="package-desc">Debugger interactivo mejorado con IPython</div>
+                        <div class="package-install">pip install ipdb</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">rich</div>
+                        <div class="package-desc">Terminal output hermoso - logs, tablas, progress bars</div>
+                        <div class="package-install">pip install rich</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">memory-profiler</div>
+                        <div class="package-desc">Analiza uso de memoria línea por línea</div>
+                        <div class="package-install">pip install memory-profiler</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">py-spy</div>
+                        <div class="package-desc">Profiler de bajo overhead para Python en producción</div>
+                        <div class="package-install">pip install py-spy</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">📋 CLI & Configuration</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">click</div>
+                        <div class="package-desc">Framework para crear CLIs elegantes</div>
+                        <div class="package-install">pip install click</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">typer</div>
+                        <div class="package-desc">CLIs con type hints - del creador de FastAPI</div>
+                        <div class="package-install">pip install typer</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">pyyaml</div>
+                        <div class="package-desc">Parser de archivos YAML</div>
+                        <div class="package-install">pip install pyyaml</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">toml</div>
+                        <div class="package-desc">Parser de archivos TOML (pyproject.toml)</div>
+                        <div class="package-install">pip install toml</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: Async & Concurrency -->
+        <div class="slide">
+            <div class="slide-header">
+                <h1 class="slide-title">⚡ Async & Concurrency</h1>
+                <p class="slide-subtitle">Paquetes para programación asíncrona y paralela</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="category-section">
+                    <h3 class="category-title">🔄 Async Frameworks</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">asyncio</div>
+                        <div class="package-desc">Librería estándar de Python para async/await</div>
+                        <div class="package-install"># Built-in - Python 3.7+</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">trio</div>
+                        <div class="package-desc">Framework async amigable con mejor API que asyncio</div>
+                        <div class="package-install">pip install trio</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">anyio</div>
+                        <div class="package-desc">Capa de abstracción sobre asyncio/trio</div>
+                        <div class="package-install">pip install anyio</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">🚀 Parallel Processing</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">multiprocessing</div>
+                        <div class="package-desc">Paralelismo con procesos - evita GIL</div>
+                        <div class="package-install"># Built-in en Python</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">joblib</div>
+                        <div class="package-desc">Paralelización fácil - usado por scikit-learn</div>
+                        <div class="package-install">pip install joblib</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">ray</div>
+                        <div class="package-desc">Distributed computing framework - escalable a clusters</div>
+                        <div class="package-install">pip install ray</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">celery</div>
+                        <div class="package-desc">Task queue distribuida para workers asíncronos</div>
+                        <div class="package-install">pip install celery</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="category-section">
+                    <h3 class="category-title">🔗 Message Queues</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">pika</div>
+                        <div class="package-desc">Cliente RabbitMQ para Python</div>
+                        <div class="package-install">pip install pika</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">kombu</div>
+                        <div class="package-desc">Abstracción sobre múltiples message brokers</div>
+                        <div class="package-install">pip install kombu</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">rq</div>
+                        <div class="package-desc">Simple Redis Queue para jobs async</div>
+                        <div class="package-install">pip install rq</div>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <h3 class="category-title">🌐 WebSockets</h3>
+                    
+                    <div class="package-card">
+                        <div class="package-name">websockets</div>
+                        <div class="package-desc">Cliente/servidor WebSocket para asyncio</div>
+                        <div class="package-install">pip install websockets</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">socketio</div>
+                        <div class="package-desc">Socket.IO para comunicación real-time</div>
+                        <div class="package-install">pip install python-socketio</div>
+                    </div>
+
+                    <div class="package-card">
+                        <div class="package-name">channels</div>
+                        <div class="package-desc">WebSockets + background tasks para Django</div>
+                        <div class="package-install">pip install channels</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-warning" style="margin-top: 1.5rem;">
+                <h3>⚠️ Nota sobre el GIL</h3>
+                <p>El Global Interpreter Lock (GIL) de Python limita el paralelismo de threads. Para CPU-bound tasks usa <strong>multiprocessing</strong> o <strong>asyncio</strong> para I/O-bound tasks.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="slide-counter">
+        <span id="current-slide">1</span> / 8
+    </div>
+
+    <div class="nav-controls">
+        <button class="nav-btn" id="prev-btn" onclick="changeSlide(-1)">← Anterior</button>
+        <button class="nav-btn" id="next-btn" onclick="changeSlide(1)">Siguiente →</button>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 8;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            
+            if (n > totalSlides) currentSlide = totalSlides;
+            if (n < 1) currentSlide = 1;
+
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[currentSlide - 1].classList.add('active');
+
+            document.getElementById('current-slide').textContent = currentSlide;
+            document.getElementById('prev-btn').disabled = currentSlide === 1;
+            document.getElementById('next-btn').disabled = currentSlide === totalSlides;
+        }
+
+        function changeSlide(direction) {
+            currentSlide += direction;
+            showSlide(currentSlide);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                changeSlide(1);
+            }
+        });
+
+        // Initialize
+        showSlide(1);
+    </script>
+</body>
+</html>
