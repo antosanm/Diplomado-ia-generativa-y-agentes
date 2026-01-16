@@ -1,0 +1,40 @@
+#https://www.anaconda.com/docs/getting-started/miniconda/install
+
+# Install packages with conda install 
+conda install numpy pandas
+
+# update all packages
+conda update --all
+
+# uninstall packages
+conda uninstall pycaret
+
+#list environments
+conda env list
+
+#create an environment
+conda create --name my_python_env
+
+# clone an existing environment
+conda create  --clone {old_env} --name {new_env}
+
+# Make environment the default environment
+conda activate my_python_env
+
+# Make the base environment the default
+conda deactivate my_python_env
+
+# Export active environment to a YAML file
+
+# Export every package including dependencies
+conda env export > environment.yml
+# Export only packages explicitly asked for
+conda env export --from-history > environment.yml
+
+# import environment from YAML file
+conda env create --name my_env2 --file environment.yml
+
+# export list of packages to TEXT file 
+conda list --export > requeriments.txt
+# import environment from TEXT file 
+conda create --name  my_env --file requeriments.txt
