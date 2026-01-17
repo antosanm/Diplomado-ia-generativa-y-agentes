@@ -1,0 +1,45 @@
+
+# 1. Abrir PowerShell como administrador
+wsl --install
+
+# 2. Reiniciar PC
+# 3. Configurar usuario y contraseña de Ubuntu
+# 4. Actualizar Ubuntu dentro de WSL
+sudo apt update && sudo apt upgrade -y
+
+# 5. verificar ubicaciones de paquetes de sistema
+which wget
+which curl
+which git
+which python3.12
+which tree
+
+# 6. Actualizar sistema
+sudo apt update
+
+# 7. instalar  un paquete de sistema 
+sudo apt install tree
+
+# 8. Desinstalar completamente y limpiar un paquete de sistema
+sudo apt purge tree && sudo apt autoremove && sudo apt autoclean
+which tree
+
+# 9. Instalar stack básico
+sudo apt install python3-pip
+sudo apt install python3-venv
+
+# 10 Desinstalar
+sudo apt remove python3-venv
+sudo apt remove python3-pip
+
+sudo apt install -y build-essential git python3 python3-pip python3-venv \
+    python3-dev curl wget vim tmux tree
+
+# 11. Comandos buscar directorio de sistema de linux
+cd ~
+cd $HOME
+cd /
+cd ..
+ls # ls -la
+
+

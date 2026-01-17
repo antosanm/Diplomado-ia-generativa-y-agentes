@@ -1,0 +1,20 @@
+name: agentes_ai
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  # Python
+  - python=3.11
+
+  # Kernel para VS Code Notebooks
+  - ipykernel
+
+  # Librerías vía pip
+  - pip
+  - pip:
+      # Notebook 2: Pydantic
+      - pydantic>=2.0
+
+      # Notebook 3: Variables de entorno
+      - python-dotenv

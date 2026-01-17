@@ -1,0 +1,26 @@
+#Comandos pip 
+
+# Lista simple
+pip list
+
+# Lista detallada con ubicación
+pip list -v
+
+# Solo paquetes instalados por el usuario (no del sistema)
+pip list --user
+
+# Solo paquetes desactualizados
+pip list --outdated
+
+# Ver detalles completos
+pip show requests
+pip show langchain
+
+# Ver versión rápidamente
+pip show langchain | grep Version
+
+# Ver dónde está instalado
+pip show langchain | grep Location
+
+# Ver dependencias
+pip show langchain | grep Requires
